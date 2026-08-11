@@ -2,7 +2,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
 import helmet from "helmet";
-import pinoHttp from "pino-http";
+import * as pinoHttp from "pino-http";
 
 import { env } from "./config/env.js";
 import { logger } from "./config/logger.js";
@@ -40,8 +40,10 @@ app.use(
 
 app.use(cookieParser());
 
+const pinoHttpMiddleware = (pinoHttp as any).default ?? pinoHttp;
+
 app.use(
-  pinoHttp({
+  pinoHttpMiddleware({
     logger
   })
 );

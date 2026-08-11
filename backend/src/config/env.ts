@@ -14,7 +14,7 @@ const envSchema = z.object({
 
   MONGODB_URI: z
     .string()
-    .min(1, "mongodb://schoolAdmin:@1s19E50@ac-pgcddmz-shard-00-00.dvnvf8s.mongodb.net:27017,ac-pgcddmz-shard-00-01.dvnvf8s.mongodb.net:27017,ac-pgcddmz-shard-00-02.dvnvf8s.mongodb.net:27017/?ssl=true&replicaSet=atlas-v8xiku-shard-0&authSource=admin&appName=SchoolMSCluster"),
+    .min(1, "mongodb://Asayehu:Admin123@ac-pgcddmz-shard-00-00.dvnvf8s.mongodb.net:27017,ac-pgcddmz-shard-00-01.dvnvf8s.mongodb.net:27017,ac-pgcddmz-shard-00-02.dvnvf8s.mongodb.net:27017/?ssl=true&replicaSet=atlas-v8xiku-shard-0&authSource=admin&appName=SchoolMSCluster"),
 
   CORS_ORIGIN: z
     .string()
