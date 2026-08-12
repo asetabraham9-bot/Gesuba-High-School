@@ -5,11 +5,11 @@ const REFRESH_TOKEN_COOKIE = "refresh_token";
 
 export function setRefreshTokenCookie(
   response: Response,
-  token: string
+  refreshToken: string
 ): void {
   response.cookie(
     REFRESH_TOKEN_COOKIE,
-    token,
+    refreshToken,
     {
       httpOnly: true,
       secure: env.COOKIE_SECURE,

@@ -1,14 +1,14 @@
 import type { Request, Response } from "express";
 import { loginSchema, registerSchema } from "./auth.validation.js";
 import { authenticateUser, registerStudent } from "./auth.service.js";
-import { createAccessToken, createRefreshToken, storeRefreshToken } from "./token.service.js";
-import {setRefreshTokenCookie } from "./auth.cookies.js";
+import { findRefreshToken, revokeRefreshToken, createAccessToken, createRefreshToken, storeRefreshToken } from "./token.service.js";
+import { setRefreshTokenCookie, clearRefreshTokenCookie } from "./auth.cookies.js";
 import { User } from "../../models/user.model.js";
 import { AppError } from "../../errors/app-error.js";
 import { ERROR_CODES } from "../../errors/error.codes.js";
 export async function registerController(
   req: Request,
-  res: Response
+  res: Response   
 ): Promise<void> {
   const input =
     registerSchema.parse(req.body);
@@ -144,6 +144,99 @@ export async function instructorTestController(
     data: {
       message: "Instructor or admin access granted",
       user: req.user
+    }
+  });
+}
+
+export async function refreshController(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const refreshToken =
+    req.cookies?.refreshToken;
+
+  if (!refreshToken) {
+    throw new AppError(
+      401,
+      ERROR_CODES.UNAUTHORIZED,
+      "Refresh token is required"
+    );
+  }
+
+  const storedToken =
+    await findRefreshToken(
+      refreshToken
+    );
+
+  if (!storedToken) {
+    throw new AppError(
+      401,
+      ERROR_CODES.UNAUTHORIZED,
+      "Invalid or expired refresh token"
+    );
+  }
+
+  const user = await User.findById(
+    storedToken.userId
+  );
+
+  if (!user) {
+    await revokeRefreshToken(
+      refreshToken
+    );
+
+    throw new AppError(
+      401,
+      ERROR_CODES.UNAUTHORIZED,
+      "User account no longer exists"
+    );
+  }
+
+  if (user.status !== "ACTIVE") {
+    await revokeRefreshToken(
+      refreshToken
+    );
+
+    throw new AppError(
+      403,
+      ERROR_CODES.ACCOUNT_NOT_ACTIVE,
+      "This account is not active"
+    );
+  }
+
+  const newAccessToken =
+    createAccessToken(
+      user.id,
+      user.role
+    );
+
+  res.status(200).json({
+    success: true,
+    data: {
+      accessToken: newAccessToken
+    }
+  });
+}
+
+export async function logoutController(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const refreshToken =
+    req.cookies?.refreshToken;
+
+  if (refreshToken) {
+    await revokeRefreshToken(
+      refreshToken
+    );
+  }
+
+  clearRefreshTokenCookie(res);
+
+  res.status(200).json({
+    success: true,
+    data: {
+      message: "Logged out successfully"
     }
   });
 }

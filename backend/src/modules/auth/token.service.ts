@@ -96,3 +96,28 @@ export async function storeRefreshToken(
     )
   });
 }
+
+export async function findRefreshToken(
+  refreshToken: string
+) {
+  const tokenHash =
+    hashRefreshToken(refreshToken);
+
+  return RefreshToken.findOne({
+    tokenHash,
+    expiresAt: {
+      $gt: new Date()
+    }
+  });
+}
+
+export async function revokeRefreshToken(
+  refreshToken: string
+): Promise<void> {
+  const tokenHash =
+    hashRefreshToken(refreshToken);
+
+  await RefreshToken.deleteOne({
+    tokenHash
+  });
+}

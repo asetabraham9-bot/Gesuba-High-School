@@ -5,7 +5,9 @@ import {
   loginController,
   getCurrentUserController,
   adminTestController,
-  instructorTestController
+  instructorTestController,
+  refreshController,
+  logoutController
 } from "./auth.controller.js";
 
 import { authenticate } from "../../middleware/auth.middleware.js";
@@ -44,4 +46,14 @@ authRouter.get(
     "ADMIN"
   ),
   instructorTestController
+);
+
+authRouter.post(
+  "/refresh",
+  refreshController
+);
+
+authRouter.post(
+  "/logout",
+  logoutController
 );
