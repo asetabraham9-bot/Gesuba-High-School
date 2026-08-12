@@ -12,7 +12,8 @@
     "lint:fix": "eslint . --fix",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "seed:admin": "tsx src/scripts/seed-admin.ts"
   },
   "keywords": [],
   "author": "",

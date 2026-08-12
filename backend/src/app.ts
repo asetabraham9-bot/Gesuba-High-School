@@ -9,7 +9,8 @@ import { logger } from "./config/logger.js";
 
 import { healthRouter } from "./routes/health.routes.js";
 import { authRouter } from "./modules/auth/auth.routes.js";
-
+import { userRouter } from "./modules/users/user.routes.js";
+import { curriculumRouter } from "./modules/curriculum/curriculum.routes.js";
 
 import { notFoundMiddleware } from "./middleware/not-found.middleware.js";
 import { errorMiddleware } from "./middleware/error.middleware.js";
@@ -39,9 +40,11 @@ app.get("/", (_req, res) => {
   });
 });
 
-// Allpications routes
+// Applications routes
 app.use("/api/v1/health", healthRouter);
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/users", userRouter);
+app.use("/api/v1/curriculum", curriculumRouter);
 
 // 404 handler
 app.use(notFoundMiddleware);

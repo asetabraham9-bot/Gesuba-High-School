@@ -1,34 +1,11 @@
 import type { Request, Response } from "express";
-import { loginSchema, registerSchema } from "./auth.validation.js";
-import { authenticateUser, registerStudent } from "./auth.service.js";
+import { loginSchema} from "./auth.validation.js";
+import { authenticateUser} from "./auth.service.js";
 import { findRefreshToken, revokeRefreshToken, createAccessToken, createRefreshToken, storeRefreshToken } from "./token.service.js";
 import { setRefreshTokenCookie, clearRefreshTokenCookie } from "./auth.cookies.js";
 import { User } from "../../models/user.model.js";
 import { AppError } from "../../errors/app-error.js";
 import { ERROR_CODES } from "../../errors/error.codes.js";
-export async function registerController(
-  req: Request,
-  res: Response   
-): Promise<void> {
-  const input =
-    registerSchema.parse(req.body);
-
-  const user = await registerStudent(
-    input.email,
-    input.password
-  );
-
-  res.status(201).json({
-    success: true,
-    data: {
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role
-      }
-    }
-  });
-}
 
 export async function loginController(
   req: Request,
