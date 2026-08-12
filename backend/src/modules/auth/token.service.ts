@@ -26,6 +26,48 @@ export function createAccessToken(
   );
 }
 
+export function verifyAccessToken(
+  token: string
+): AccessTokenPayload {
+  try {
+    const payload = jwt.verify(
+      token,
+      env.JWT_ACCESS_SECRET
+    );
+
+    if (
+      typeof payload !== "object" ||
+      payload === null
+    ) {
+      throw new Error("INVALID_TOKEN_PAYLOAD");
+    }
+
+    if (
+      typeof payload.sub !== "string" ||
+      typeof payload.role !== "string" ||
+      payload.type !== "access"
+    ) {
+      throw new Error("INVALID_TOKEN_PAYLOAD");
+    }
+
+    if (
+      payload.role !== "STUDENT" &&
+      payload.role !== "INSTRUCTOR" &&
+      payload.role !== "ADMIN"
+    ) {
+      throw new Error("INVALID_TOKEN_ROLE");
+    }
+
+    return {
+      sub: payload.sub,
+      role: payload.role,
+      type: "access"
+    };
+  } catch {
+    throw new Error("INVALID_ACCESS_TOKEN");
+  }
+}
+
 export function createRefreshToken(): string {
   return crypto.randomBytes(64).toString("hex");
 }

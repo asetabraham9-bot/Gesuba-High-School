@@ -1,25 +1,11 @@
 import type { Request, Response } from "express";
-
-import {
-  loginSchema,
-  registerSchema
-} from "./auth.validation.js";
-
-import {
-  authenticateUser,
-  registerStudent
-} from "./auth.service.js";
-
-import {
-  createAccessToken,
-  createRefreshToken,
-  storeRefreshToken
-} from "./token.service.js";
-
-import {
-  setRefreshTokenCookie
-} from "./auth.cookies.js";
-
+import { loginSchema, registerSchema } from "./auth.validation.js";
+import { authenticateUser, registerStudent } from "./auth.service.js";
+import { createAccessToken, createRefreshToken, storeRefreshToken } from "./token.service.js";
+import {setRefreshTokenCookie } from "./auth.cookies.js";
+import { User } from "../../models/user.model.js";
+import { AppError } from "../../errors/app-error.js";
+import { ERROR_CODES } from "../../errors/error.codes.js";
 export async function registerController(
   req: Request,
   res: Response
@@ -84,6 +70,54 @@ export async function loginController(
         id: user.id,
         email: user.email,
         role: user.role
+      }
+    }
+  });
+}
+
+export async function getCurrentUserController(
+  req: Request,
+  res: Response
+): Promise<void> {
+  if (!req.user) {
+    throw new AppError(
+      401,
+      ERROR_CODES.UNAUTHORIZED,
+      "Authentication is required"
+    );
+  }
+
+  const user = await User.findById(
+    req.user.id
+  );
+
+  if (!user) {
+    throw new AppError(
+      401,
+      ERROR_CODES.UNAUTHORIZED,
+      "User account no longer exists"
+    );
+  }
+
+  if (user.status !== "ACTIVE") {
+    throw new AppError(
+      403,
+      ERROR_CODES.ACCOUNT_NOT_ACTIVE,
+      "This account is not active"
+    );
+  }
+
+  res.status(200).json({
+    success: true,
+    data: {
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        status: user.status,
+        emailVerified: user.emailVerified,
+        createdAt: user.createdAt,
+        lastLoginAt: user.lastLoginAt
       }
     }
   });
