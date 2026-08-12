@@ -14,26 +14,43 @@ const envSchema = z.object({
 
   MONGODB_URI: z
     .string()
-    .min(1, "mongodb://Asayehu:Admin123@ac-pgcddmz-shard-00-00.dvnvf8s.mongodb.net:27017,ac-pgcddmz-shard-00-01.dvnvf8s.mongodb.net:27017,ac-pgcddmz-shard-00-02.dvnvf8s.mongodb.net:27017/?ssl=true&replicaSet=atlas-v8xiku-shard-0&authSource=admin&appName=SchoolMSCluster"),
+    .min(1, "MONGODB_URI is required"),
 
   CORS_ORIGIN: z
     .string()
-    .min(1, "http://localhost:5173"),
+    .min(1, "CORS_ORIGIN is required"),
 
   LOG_LEVEL: z
     .enum(["fatal", "error", "warn", "info", "debug", "trace"])
-    .default("info")
+    .default("info"),
+
+  JWT_ACCESS_SECRET: z
+    .string()
+    .min(32, "JWT_ACCESS_SECRET must be at least 32 characters"),
+
+  JWT_REFRESH_SECRET: z
+    .string()
+    .min(32, "JWT_REFRESH_SECRET must be at least 32 characters"),
+
+  JWT_ACCESS_EXPIRES_IN: z
+    .string()
+    .default("15m"),
+
+  JWT_REFRESH_EXPIRES_IN: z
+    .string()
+    .default("7d"),
+
+  COOKIE_SECURE: z
+    .enum(["true", "false"])
+    .transform((value) => value === "true")
+    
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
 
 if (!parsedEnv.success) {
   console.error("Invalid environment configuration:");
-
-  console.error(
-    parsedEnv.error.flatten().fieldErrors
-  );
-
+  console.error(parsedEnv.error.flatten().fieldErrors);
   process.exit(1);
 }
 
