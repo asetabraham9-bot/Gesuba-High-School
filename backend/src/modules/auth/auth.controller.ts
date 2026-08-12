@@ -122,3 +122,28 @@ export async function getCurrentUserController(
     }
   });
 }
+export async function adminTestController(
+  req: Request,
+  res: Response
+): Promise<void> {
+  res.status(200).json({
+    success: true,
+    data: {
+      message: "Admin access granted",
+      user: req.user
+    }
+  });
+}
+
+export async function instructorTestController(
+  req: Request,
+  res: Response
+): Promise<void> {
+  res.status(200).json({
+    success: true,
+    data: {
+      message: "Instructor or admin access granted",
+      user: req.user
+    }
+  });
+}
