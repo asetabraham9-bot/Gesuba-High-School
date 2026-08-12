@@ -4,28 +4,68 @@ import { Unit } from "../../models/unit.model.js";
 import { AppError } from "../../errors/app-error.js";
 import { ERROR_CODES } from "../../errors/error.codes.js";
 
+type MaterialRole =
+  | "ADMIN"
+  | "INSTRUCTOR"
+  | "STUDENT";
+
+type MaterialType =
+  | "NOTE"
+  | "PDF"
+  | "VIDEO"
+  | "EXERCISE"
+  | "REFERENCE";
+
+interface CreateStudyMaterialInput {
+  title: string;
+  description?: string;
+  type: MaterialType;
+  unitId: string;
+  content?: string;
+  fileUrl?: string;
+}
+
+interface UpdateStudyMaterialInput {
+  title?: string;
+  description?: string;
+  type?: MaterialType;
+  unitId?: string;
+  content?: string;
+  fileUrl?: string;
+}
+
 function isValidObjectId(
   id: string
 ): boolean {
   return /^[a-f\d]{24}$/i.test(id);
 }
 
-  // CREATE
+function ensureOwner(
+  material: {
+    createdBy: {
+      toString(): string;
+    };
+  },
+  userId: string
+): void {
+  if (
+    material.createdBy.toString() !==
+    userId
+  ) {
+    throw new AppError(
+      403,
+      ERROR_CODES.FORBIDDEN,
+      "You can only manage your own study materials"
+    );
+  }
+}
+
+/* =========================
+   CREATE
+========================= */
 
 export async function createStudyMaterial(
-  data: {
-    title: string;
-    description?: string;
-    type:
-      | "NOTE"
-      | "PDF"
-      | "VIDEO"
-      | "EXERCISE"
-      | "REFERENCE";
-    unitId: string;
-    content?: string;
-    fileUrl?: string;
-  },
+  data: CreateStudyMaterialInput,
   createdBy: string
 ) {
   if (!isValidObjectId(data.unitId)) {
@@ -37,9 +77,7 @@ export async function createStudyMaterial(
   }
 
   const unit =
-    await Unit.findById(
-      data.unitId
-    );
+    await Unit.findById(data.unitId);
 
   if (!unit) {
     throw new AppError(
@@ -58,19 +96,29 @@ export async function createStudyMaterial(
 
   return StudyMaterial.findById(
     material._id
-  ).populate({
-    path: "unitId",
-    select: "title unitNumber subjectId"
-  });
+  )
+    .populate({
+      path: "unitId",
+      select:
+        "title unitNumber subjectId"
+    })
+    .populate({
+      path: "createdBy",
+      select: "email role"
+    });
 }
 
-  // LIST
+/* =========================
+   LIST
+========================= */
 
 export async function getStudyMaterials(
   options: {
     unitId?: string;
     type?: string;
     status?: string;
+    userId?: string;
+    role?: MaterialRole;
   } = {}
 ) {
   const filter: Record<
@@ -100,12 +148,53 @@ export async function getStudyMaterials(
       options.type;
   }
 
-  if (options.status) {
+  /*
+   * STUDENT
+   * Only published materials.
+   */
+  if (
+    options.role === "STUDENT"
+  ) {
+    filter.status =
+      "PUBLISHED";
+  }
+
+  /*
+   * INSTRUCTOR
+   *
+   * Can see:
+   * - all published materials
+   * - own draft materials
+   * - own archived materials
+   */
+  if (
+    options.role === "INSTRUCTOR"
+  ) {
+    filter.$or = [
+      {
+        status: "PUBLISHED"
+      },
+      {
+        createdBy:
+          options.userId
+      }
+    ];
+  }
+
+  /*
+   * ADMIN
+   *
+   * Can see everything.
+   *
+   * If status is provided,
+   * filter by it.
+   */
+  if (
+    options.role === "ADMIN" &&
+    options.status
+  ) {
     filter.status =
       options.status;
-  } else {
-    
-    filter.status = "PUBLISHED";
   }
 
   return StudyMaterial.find(
@@ -126,10 +215,13 @@ export async function getStudyMaterials(
     });
 }
 
-  // GET ONE
+/* =========================
+   GET ONE
+========================= */
 
 export async function getStudyMaterialById(
-  id: string
+  id: string,
+  role: MaterialRole
 ) {
   if (!isValidObjectId(id)) {
     throw new AppError(
@@ -162,32 +254,68 @@ export async function getStudyMaterialById(
     );
   }
 
+  /*
+   * Students and instructors
+   * can only retrieve published
+   * materials through direct ID
+   * access unless they are the
+   * owner.
+   *
+   * Since instructor ownership
+   * is handled at the list level,
+   * direct access to unpublished
+   * materials is restricted here
+   * for non-admin users.
+   */
+  if (
+    role === "STUDENT" &&
+    material.status !== "PUBLISHED"
+  ) {
+    throw new AppError(
+      404,
+      ERROR_CODES.NOT_FOUND,
+      "Study material not found"
+    );
+  }
+
   return material;
 }
 
-  // UPDATE
+/* =========================
+   UPDATE
+========================= */
 
 export async function updateStudyMaterial(
   id: string,
-  data: {
-    title?: string;
-    description?: string;
-    type?:
-      | "NOTE"
-      | "PDF"
-      | "VIDEO"
-      | "EXERCISE"
-      | "REFERENCE";
-    unitId?: string;
-    content?: string;
-    fileUrl?: string;
-  }
+  data: UpdateStudyMaterialInput,
+  userId: string,
+  role: "ADMIN" | "INSTRUCTOR"
 ) {
   if (!isValidObjectId(id)) {
     throw new AppError(
       400,
       ERROR_CODES.INVALID_OPERATION,
       "Invalid material ID"
+    );
+  }
+
+  const existing =
+    await StudyMaterial.findById(
+      id
+    );
+
+  if (!existing) {
+    throw new AppError(
+      404,
+      ERROR_CODES.NOT_FOUND,
+      "Study material not found"
+    );
+  }
+
+  if (role === "INSTRUCTOR") {
+    ensureOwner(
+      existing,
+      userId
     );
   }
 
@@ -249,11 +377,15 @@ export async function updateStudyMaterial(
   return material;
 }
 
-  // DELETE
+/* =========================
+   DELETE
+========================= */
 
 export async function deleteStudyMaterial(
-  id: string
-) {
+  id: string,
+  userId: string,
+  role: "ADMIN" | "INSTRUCTOR"
+): Promise<void> {
   if (!isValidObjectId(id)) {
     throw new AppError(
       400,
@@ -272,18 +404,27 @@ export async function deleteStudyMaterial(
       404,
       ERROR_CODES.NOT_FOUND,
       "Study material not found"
+    );
+  }
+
+  if (role === "INSTRUCTOR") {
+    ensureOwner(
+      material,
+      userId
     );
   }
 
   await material.deleteOne();
 }
 
-
-  // PUBLISH
-
+/* =========================
+   PUBLISH
+========================= */
 
 export async function publishStudyMaterial(
-  id: string
+  id: string,
+  userId: string,
+  role: "ADMIN" | "INSTRUCTOR"
 ) {
   if (!isValidObjectId(id)) {
     throw new AppError(
@@ -303,6 +444,13 @@ export async function publishStudyMaterial(
       404,
       ERROR_CODES.NOT_FOUND,
       "Study material not found"
+    );
+  }
+
+  if (role === "INSTRUCTOR") {
+    ensureOwner(
+      material,
+      userId
     );
   }
 
@@ -329,12 +477,14 @@ export async function publishStudyMaterial(
     });
 }
 
-
-  // ARCHIVE
-
+/* =========================
+   ARCHIVE
+========================= */
 
 export async function archiveStudyMaterial(
-  id: string
+  id: string,
+  userId: string,
+  role: "ADMIN" | "INSTRUCTOR"
 ) {
   if (!isValidObjectId(id)) {
     throw new AppError(
@@ -354,6 +504,13 @@ export async function archiveStudyMaterial(
       404,
       ERROR_CODES.NOT_FOUND,
       "Study material not found"
+    );
+  }
+
+  if (role === "INSTRUCTOR") {
+    ensureOwner(
+      material,
+      userId
     );
   }
 

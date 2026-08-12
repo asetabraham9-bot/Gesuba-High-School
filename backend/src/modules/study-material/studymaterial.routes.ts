@@ -25,9 +25,7 @@ studyMaterialRouter.use(
   authenticate
 );
 
-/*
- * READ
- */
+//   READ
 
 studyMaterialRouter.get(
   "/",
@@ -39,36 +37,60 @@ studyMaterialRouter.get(
   getStudyMaterialController
 );
 
-/*
- * ADMIN WRITE
- */
+
+//   CREATE
+
 
 studyMaterialRouter.post(
   "/",
-  authorize("ADMIN"),
+  authorize(
+    "ADMIN",
+    "INSTRUCTOR"
+  ),
   createStudyMaterialController
 );
 
+//   UPDATE
+
+
 studyMaterialRouter.patch(
   "/:id",
-  authorize("ADMIN"),
+  authorize(
+    "ADMIN",
+    "INSTRUCTOR"
+  ),
   updateStudyMaterialController
 );
 
+//   DELETE
+
+
 studyMaterialRouter.delete(
   "/:id",
-  authorize("ADMIN"),
+  authorize(
+    "ADMIN",
+    "INSTRUCTOR"
+  ),
   deleteStudyMaterialController
 );
 
+  // PUBLISH
+
 studyMaterialRouter.post(
   "/:id/publish",
-  authorize("ADMIN"),
+  authorize(
+    "ADMIN",
+    "INSTRUCTOR"
+  ),
   publishStudyMaterialController
 );
 
+//ARCHIEVE
 studyMaterialRouter.post(
   "/:id/archive",
-  authorize("ADMIN"),
+  authorize(
+    "ADMIN",
+    "INSTRUCTOR"
+  ),
   archiveStudyMaterialController
 );

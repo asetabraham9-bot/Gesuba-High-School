@@ -18,21 +18,18 @@ import {
   archiveStudyMaterial
 } from "./studymaterial.service.js";
 
-
-/* =====================================================
-   CREATE STUDY MATERIAL
-===================================================== */
+/* =========================
+   CREATE
+========================= */
 
 export async function createStudyMaterialController(
   req: Request,
   res: Response
 ): Promise<void> {
-
   const input =
     createStudyMaterialSchema.parse(
       req.body
     );
-
 
   const material =
     await createStudyMaterial(
@@ -40,29 +37,24 @@ export async function createStudyMaterialController(
       req.user!.id
     );
 
-
   res.status(201).json({
     success: true,
-
     data: {
       material
     }
   });
 }
 
-
-/* =====================================================
-   LIST STUDY MATERIALS
-===================================================== */
+/* =========================
+   LIST
+========================= */
 
 export async function getStudyMaterialsController(
   req: Request,
   res: Response
 ): Promise<void> {
-
   const materials =
     await getStudyMaterials({
-
       unitId:
         req.query.unitId as
           | string
@@ -76,96 +68,90 @@ export async function getStudyMaterialsController(
       status:
         req.query.status as
           | string
-          | undefined
-    });
+          | undefined,
 
+      userId:
+        req.user!.id,
+
+      role:
+        req.user!.role
+    });
 
   res.status(200).json({
     success: true,
-
     data: {
       materials
     }
   });
 }
 
-
-/* =====================================================
-   GET ONE STUDY MATERIAL
-===================================================== */
+/* =========================
+   GET ONE
+========================= */
 
 export async function getStudyMaterialController(
   req: Request,
   res: Response
 ): Promise<void> {
-
-  const id = Array.isArray(req.params.id)
-    ? req.params.id[0]
-    : req.params.id as string;
-
-  const material = await getStudyMaterialById(id);
+  const material =
+      await getStudyMaterialById(
+        (Array.isArray(req.params.id) ? req.params.id[0] : req.params.id) as string,
+      req.user!.role as "INSTRUCTOR" | "ADMIN"
+    );
 
   res.status(200).json({
     success: true,
-
     data: {
       material
     }
   });
 }
 
-
-/* =====================================================
-   UPDATE STUDY MATERIAL
-===================================================== */
+/* =========================
+   UPDATE
+========================= */
 
 export async function updateStudyMaterialController(
   req: Request,
   res: Response
 ): Promise<void> {
-
   const input =
     updateStudyMaterialSchema.parse(
       req.body
     );
 
-
-  const id = Array.isArray(req.params.id)
-    ? req.params.id[0]
-    : req.params.id as string;
-
-  const material = await updateStudyMaterial(id, input);
-
+  const material =
+      await updateStudyMaterial(
+        (Array.isArray(req.params.id) ? req.params.id[0] : req.params.id) as string,
+      input,
+      req.user!.id,
+      req.user!.role as "INSTRUCTOR" | "ADMIN"
+    );
 
   res.status(200).json({
     success: true,
-
     data: {
       material
     }
   });
 }
 
-
-/* =====================================================
-   DELETE STUDY MATERIAL
-===================================================== */
+/* =========================
+   DELETE
+========================= */
 
 export async function deleteStudyMaterialController(
   req: Request,
   res: Response
 ): Promise<void> {
-
-  const id = Array.isArray(req.params.id)
-    ? req.params.id[0]
-    : req.params.id as string;
-
-  await deleteStudyMaterial(id);
-
+  await deleteStudyMaterial(
+     (Array.isArray(req.params.id) ? req.params.id[0] : req.params.id) as string,
+    req.user!.id,
+    req.user!.role as "INSTRUCTOR" | "ADMIN"
+  );
 
   res.status(200).json({
     success: true,
-
     data: {
       message:
         "Study material deleted successfully"
@@ -173,52 +159,46 @@ export async function deleteStudyMaterialController(
   });
 }
 
-
-/* =====================================================
-   PUBLISH STUDY MATERIAL
-===================================================== */
+/* =========================
+   PUBLISH
+========================= */
 
 export async function publishStudyMaterialController(
   req: Request,
   res: Response
 ): Promise<void> {
-
-  const id = Array.isArray(req.params.id)
-    ? req.params.id[0]
-    : req.params.id as string;
-
-  const material = await publishStudyMaterial(id);
-
+  const material =
+      await publishStudyMaterial(
+        (Array.isArray(req.params.id) ? req.params.id[0] : req.params.id) as string,
+      req.user!.id,
+      req.user!.role as "INSTRUCTOR" | "ADMIN"
+    );
 
   res.status(200).json({
     success: true,
-
     data: {
       material
     }
   });
 }
 
-
-/* =====================================================
-   ARCHIVE STUDY MATERIAL
-===================================================== */
+/* =========================
+   ARCHIVE
+========================= */
 
 export async function archiveStudyMaterialController(
   req: Request,
   res: Response
 ): Promise<void> {
-
-  const id = Array.isArray(req.params.id)
-    ? req.params.id[0]
-    : req.params.id as string;
-
-  const material = await archiveStudyMaterial(id);
-
+  const material =
+      await archiveStudyMaterial(
+        (Array.isArray(req.params.id) ? req.params.id[0] : req.params.id) as string,
+      req.user!.id,
+      req.user!.role as "INSTRUCTOR" | "ADMIN"
+    );
 
   res.status(200).json({
     success: true,
-
     data: {
       material
     }
