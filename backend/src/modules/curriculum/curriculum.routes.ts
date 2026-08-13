@@ -7,6 +7,12 @@ import {
   updateGradeController,
   deleteGradeController,
 
+  createClassLevelController,
+  getClassLevelsController,
+  getClassLevelController,
+  updateClassLevelController,
+  deleteClassLevelController,
+
   createSubjectController,
   getSubjectsController,
   getSubjectController,
@@ -66,6 +72,36 @@ curriculumRouter.delete(
   "/grades/:id",
   authorize("ADMIN"),
   deleteGradeController
+);
+
+  // CLASS LEVELS
+
+curriculumRouter.get(
+  "/class-levels",
+  getClassLevelsController
+);
+
+curriculumRouter.post(
+  "/class-levels",
+  authorize("ADMIN"),
+  createClassLevelController
+);
+
+curriculumRouter.get(
+  "/class-levels/:id",
+  getClassLevelController
+);
+
+curriculumRouter.patch(
+  "/class-levels/:id",
+  authorize("ADMIN"),
+  updateClassLevelController
+);
+
+curriculumRouter.delete(
+  "/class-levels/:id",
+  authorize("ADMIN"),
+  deleteClassLevelController
 );
 
   // SUBJECTS

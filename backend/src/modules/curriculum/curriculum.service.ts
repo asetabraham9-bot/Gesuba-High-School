@@ -1,6 +1,8 @@
 import { Grade } from "../../models/grade.model.js";
+import { ClassLevel } from "../../models/class-level.model.js";
 import { Subject } from "../../models/subject.model.js";
 import { Unit } from "../../models/unit.model.js";
+import { Types } from "mongoose";
 
 import { AppError } from "../../errors/app-error.js";
 import { ERROR_CODES } from "../../errors/error.codes.js";
@@ -143,6 +145,175 @@ export async function deleteGrade(
   await grade.deleteOne();
 }
 
+// CLASS LEVELS
+
+export async function createClassLevel(
+  data: {
+    gradeId: string;
+    section: string;
+    capacity?: number;
+  }
+) {
+  if (!isValidObjectId(data.gradeId)) {
+    throw new AppError(
+      400,
+      ERROR_CODES.INVALID_OPERATION,
+      "Invalid grade ID"
+    );
+  }
+
+  const grade =
+    await Grade.findById(
+      data.gradeId
+    );
+
+  if (!grade) {
+    throw new AppError(
+      404,
+      ERROR_CODES.NOT_FOUND,
+      "Grade not found"
+    );
+  }
+
+  return ClassLevel.create({
+    gradeId: data.gradeId as any,
+    section: data.section.toUpperCase(),
+    capacity: data.capacity
+  } as any);
+}
+
+export async function getClassLevels(
+  gradeId?: string
+) {
+  const filter: Record<string, unknown> = {
+    isActive: true
+  };
+
+  if (gradeId) {
+    if (!isValidObjectId(gradeId)) {
+      throw new AppError(
+        400,
+        ERROR_CODES.INVALID_OPERATION,
+        "Invalid grade ID"
+      );
+    }
+
+    filter.gradeId = gradeId;
+  }
+
+  return ClassLevel.find(filter)
+    .populate(
+      "gradeId",
+      "name number"
+    )
+    .sort({
+      "gradeId": 1,
+      "section": 1
+    });
+}
+
+export async function getClassLevelById(
+  id: string
+) {
+  if (!isValidObjectId(id)) {
+    throw new AppError(
+      400,
+      ERROR_CODES.INVALID_OPERATION,
+      "Invalid class level ID"
+    );
+  }
+
+  const classLevel =
+    await ClassLevel.findById(id)
+      .populate(
+        "gradeId",
+        "name number"
+      );
+
+  if (!classLevel) {
+    throw new AppError(
+      404,
+      ERROR_CODES.NOT_FOUND,
+      "Class level not found"
+    );
+  }
+
+  return classLevel;
+}
+
+export async function updateClassLevel(
+  id: string,
+  data: {
+    section?: string;
+    capacity?: number;
+    isActive?: boolean;
+  }
+) {
+  if (!isValidObjectId(id)) {
+    throw new AppError(
+      400,
+      ERROR_CODES.INVALID_OPERATION,
+      "Invalid class level ID"
+    );
+  }
+
+  if (data.section) {
+    data.section =
+      data.section.toUpperCase();
+  }
+
+  const classLevel =
+    await ClassLevel.findByIdAndUpdate(
+      id,
+      data,
+      {
+        new: true,
+        runValidators: true
+      }
+    ).populate(
+      "gradeId",
+      "name number"
+    );
+
+  if (!classLevel) {
+    throw new AppError(
+      404,
+      ERROR_CODES.NOT_FOUND,
+      "Class level not found"
+    );
+  }
+
+  return classLevel;
+}
+
+export async function deleteClassLevel(
+  id: string
+) {
+  if (!isValidObjectId(id)) {
+    throw new AppError(
+      400,
+      ERROR_CODES.INVALID_OPERATION,
+      "Invalid class level ID"
+    );
+  }
+
+  const classLevel =
+    await ClassLevel.findById(id);
+
+  if (!classLevel) {
+    throw new AppError(
+      404,
+      ERROR_CODES.NOT_FOUND,
+      "Class level not found"
+    );
+  }
+
+  // Check if there are any dependent exams or assignments
+  // This will be implemented when needed
+  // For now, allow deletion
+
+  await classLevel.deleteOne();
+}
 
 // SUBJECTS
 

@@ -31,3 +31,13 @@ export const createUnitSchema =
 
 export const updateUnitSchema =
   createUnitSchema.partial();
+
+export const createClassLevelSchema =
+  z.object({
+    gradeId: z.string().min(1),
+    section: z.enum(["A", "B", "C", "D", "E", "F"]),
+    capacity: z.number().int().min(1).max(100).optional()
+  });
+
+export const updateClassLevelSchema =
+  createClassLevelSchema.partial();

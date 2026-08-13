@@ -12,6 +12,7 @@ import { authRouter } from "./modules/auth/auth.routes.js";
 import { userRouter } from "./modules/users/user.routes.js";
 import { curriculumRouter } from "./modules/curriculum/curriculum.routes.js";
 import { studyMaterialRouter } from "./modules/study-material/studymaterial.routes.js";
+import examRoutes from "./modules/exam/exam.routes.js";
 
 import { notFoundMiddleware } from "./middleware/not-found.middleware.js";
 import { errorMiddleware } from "./middleware/error.middleware.js";
@@ -47,6 +48,8 @@ app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/curriculum", curriculumRouter);
 app.use("/api/v1/study-material", studyMaterialRouter);
+app.use("/api/v1/exams", examRoutes);
+
 // 404 handler
 app.use(notFoundMiddleware);
 

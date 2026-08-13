@@ -9,7 +9,9 @@ import {
   createSubjectSchema,
   updateSubjectSchema,
   createUnitSchema,
-  updateUnitSchema
+  updateUnitSchema,
+  createClassLevelSchema,
+  updateClassLevelSchema
 } from "./curriculum.validation.js";
 
 import {
@@ -18,6 +20,11 @@ import {
   getGradeById,
   updateGrade,
   deleteGrade,
+  createClassLevel,
+  getClassLevels,
+  getClassLevelById,
+  updateClassLevel,
+  deleteClassLevel,
   createSubject,
   getSubjects,
   getSubjectById,
@@ -112,6 +119,96 @@ export async function deleteGradeController(
     data: {
       message:
         "Grade deleted successfully"
+    }
+  });
+}
+
+// CLASS LEVELS
+
+export async function createClassLevelController(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const input =
+    createClassLevelSchema.parse(
+      req.body
+    );
+
+  const classLevel =
+    await createClassLevel(input);
+
+  res.status(201).json({
+    success: true,
+    data: { classLevel }
+  });
+}
+
+export async function getClassLevelsController(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const classLevels =
+    await getClassLevels(
+      req.query.gradeId as
+        | string
+        | undefined
+    );
+
+  res.status(200).json({
+    success: true,
+    data: { classLevels }
+  });
+}
+
+export async function getClassLevelController(
+  req: Request<{ id: string }>,
+  res: Response
+): Promise<void> {
+  const classLevel =
+    await getClassLevelById(
+      req.params.id
+    );
+
+  res.status(200).json({
+    success: true,
+    data: { classLevel }
+  });
+}
+
+export async function updateClassLevelController(
+  req: Request<{ id: string }>,
+  res: Response
+): Promise<void> {
+  const input =
+    updateClassLevelSchema.parse(
+      req.body
+    );
+
+  const classLevel =
+    await updateClassLevel(
+      req.params.id,
+      input
+    );
+
+  res.status(200).json({
+    success: true,
+    data: { classLevel }
+  });
+}
+
+export async function deleteClassLevelController(
+  req: Request<{ id: string }>,
+  res: Response
+): Promise<void> {
+  await deleteClassLevel(
+    req.params.id
+  );
+
+  res.status(200).json({
+    success: true,
+    data: {
+      message:
+        "Class level deleted successfully"
     }
   });
 }
