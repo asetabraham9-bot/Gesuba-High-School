@@ -7,7 +7,10 @@ import {
   createExamSchema,
   updateExamSchema,
   createQuestionSchema,
-  updateQuestionSchema
+  updateQuestionSchema,
+  publishExamSchema,
+  approveExamSchema,
+  rejectExamSchema
 } from "./exam.validation.js";
 
 import {
@@ -20,7 +23,11 @@ import {
   getExamQuestions,
   getQuestionById,
   updateQuestion,
-  deleteQuestion
+  deleteQuestion,
+  publishExam,
+  approveExam,
+  rejectExam,
+  getExamsForApproval
 } from "./exam.service.js";
 
 export async function createExamController(
@@ -276,5 +283,93 @@ export async function deleteQuestionController(
       message:
         "Question deleted successfully"
     }
+  });
+}
+
+// EXAM WORKFLOW CONTROLLERS
+
+export async function publishExamController(
+  req: Request<{ id: string }>,
+  res: Response
+): Promise<void> {
+  const examId =
+    Array.isArray(req.params.id)
+      ? req.params.id[0]
+      : req.params.id;
+
+  publishExamSchema.parse(req.body);
+
+  const exam =
+    await publishExam(
+      examId,
+      req.user!.id
+    );
+
+  res.status(200).json({
+    success: true,
+    data: { exam }
+  });
+}
+
+export async function approveExamController(
+  req: Request<{ id: string }>,
+  res: Response
+): Promise<void> {
+  const examId =
+    Array.isArray(req.params.id)
+      ? req.params.id[0]
+      : req.params.id;
+
+  approveExamSchema.parse(req.body);
+
+  const exam =
+    await approveExam(
+      examId,
+      req.user!.id
+    );
+
+  res.status(200).json({
+    success: true,
+    data: { exam }
+  });
+}
+
+export async function rejectExamController(
+  req: Request<{ id: string }>,
+  res: Response
+): Promise<void> {
+  const examId =
+    Array.isArray(req.params.id)
+      ? req.params.id[0]
+      : req.params.id;
+
+  const { rejectionReason } =
+    rejectExamSchema.parse(
+      req.body
+    );
+
+  const exam =
+    await rejectExam(
+      examId,
+      req.user!.id,
+      rejectionReason
+    );
+
+  res.status(200).json({
+    success: true,
+    data: { exam }
+  });
+}
+
+export async function getExamsForApprovalController(
+  _req: Request,
+  res: Response
+): Promise<void> {
+  const exams =
+    await getExamsForApproval();
+
+  res.status(200).json({
+    success: true,
+    data: { exams }
   });
 }

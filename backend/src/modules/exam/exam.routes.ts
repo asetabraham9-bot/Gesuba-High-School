@@ -18,7 +18,11 @@ import {
   getExamQuestionsController,
   getQuestionController,
   updateQuestionController,
-  deleteQuestionController
+  deleteQuestionController,
+  publishExamController,
+  approveExamController,
+  rejectExamController,
+  getExamsForApprovalController
 } from "./exam.controller.js";
 
 const router = Router();
@@ -83,6 +87,32 @@ router.delete(
   "/:examId/questions/:questionId",
   authorize("INSTRUCTOR"),
   deleteQuestionController
+);
+
+// EXAM WORKFLOW ROUTES
+
+router.post(
+  "/:id/publish",
+  authorize("INSTRUCTOR"),
+  publishExamController
+);
+
+router.get(
+  "/approval-queue",
+  authorize("ADMIN"),
+  getExamsForApprovalController
+);
+
+router.post(
+  "/:id/approve",
+  authorize("ADMIN"),
+  approveExamController
+);
+
+router.post(
+  "/:id/reject",
+  authorize("ADMIN"),
+  rejectExamController
 );
 
 export default router;

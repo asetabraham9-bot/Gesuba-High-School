@@ -246,3 +246,32 @@ export const updateQuestionSchema =
       .max(1000)
       .optional()
   });
+
+// EXAM WORKFLOW SCHEMAS
+
+export const publishExamSchema =
+  z.object({
+    message: z
+      .string()
+      .min(1)
+      .optional()
+  });
+
+export const approveExamSchema =
+  z.object({
+    message: z
+      .string()
+      .min(1)
+      .optional()
+  });
+
+export const rejectExamSchema =
+  z.object({
+    rejectionReason: z
+      .string()
+      .min(10)
+      .max(1000)
+      .describe(
+        "Reason for rejecting the exam"
+      )
+  });

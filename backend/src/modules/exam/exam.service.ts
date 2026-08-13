@@ -501,3 +501,248 @@ export async function deleteQuestion(
     { $inc: { order: -1 } }
   );
 }
+
+// EXAM WORKFLOW FUNCTIONS
+
+export async function publishExam(
+  examId: string,
+  instructorId: string
+) {
+  if (
+    !Types.ObjectId.isValid(examId)
+  ) {
+    throw new AppError(
+      400,
+      ERROR_CODES.INVALID_OPERATION,
+      "Invalid exam ID"
+    );
+  }
+
+  const exam = await Exam.findById(
+    examId
+  );
+
+  if (!exam) {
+    throw new AppError(
+      404,
+      ERROR_CODES.NOT_FOUND,
+      "Exam not found"
+    );
+  }
+
+  if (
+    exam.createdBy.toString() !==
+    instructorId
+  ) {
+    throw new AppError(
+      403,
+      ERROR_CODES.FORBIDDEN,
+      "You can only publish your own exams"
+    );
+  }
+
+  if (exam.status !== "DRAFT") {
+    throw new AppError(
+      400,
+      ERROR_CODES.INVALID_OPERATION,
+      "Only DRAFT exams can be published"
+    );
+  }
+
+  // Verify exam has questions
+  const questionCount =
+    await Question.countDocuments({
+      examId
+    });
+
+  if (questionCount === 0) {
+    throw new AppError(
+      400,
+      ERROR_CODES.INVALID_OPERATION,
+      "Exam must have at least one question"
+    );
+  }
+
+  const updated =
+    await Exam.findByIdAndUpdate(
+      examId,
+      {
+        status: "PENDING_APPROVAL"
+      },
+      { new: true }
+    ).populate([
+      {
+        path: "createdBy",
+        select: "email name"
+      },
+      {
+        path: "classLevelId",
+        select: "section gradeId"
+      },
+      {
+        path: "subjectId",
+        select: "name"
+      }
+    ]);
+
+  return updated;
+}
+
+export async function approveExam(
+  examId: string,
+  adminId: string
+) {
+  if (
+    !Types.ObjectId.isValid(examId)
+  ) {
+    throw new AppError(
+      400,
+      ERROR_CODES.INVALID_OPERATION,
+      "Invalid exam ID"
+    );
+  }
+
+  const exam = await Exam.findById(
+    examId
+  );
+
+  if (!exam) {
+    throw new AppError(
+      404,
+      ERROR_CODES.NOT_FOUND,
+      "Exam not found"
+    );
+  }
+
+  if (
+    exam.status !==
+    "PENDING_APPROVAL"
+  ) {
+    throw new AppError(
+      400,
+      ERROR_CODES.INVALID_OPERATION,
+      "Only PENDING_APPROVAL exams can be approved"
+    );
+  }
+
+  const updated =
+    await Exam.findByIdAndUpdate(
+      examId,
+      {
+        status: "APPROVED",
+        approvedBy: adminId,
+        approvedAt: new Date()
+      },
+      { new: true }
+    ).populate([
+      {
+        path: "createdBy",
+        select: "email name"
+      },
+      {
+        path: "approvedBy",
+        select: "email name"
+      },
+      {
+        path: "classLevelId",
+        select: "section gradeId"
+      },
+      {
+        path: "subjectId",
+        select: "name"
+      }
+    ]);
+
+  return updated;
+}
+
+export async function rejectExam(
+  examId: string,
+  adminId: string,
+  rejectionReason: string
+) {
+  if (
+    !Types.ObjectId.isValid(examId)
+  ) {
+    throw new AppError(
+      400,
+      ERROR_CODES.INVALID_OPERATION,
+      "Invalid exam ID"
+    );
+  }
+
+  const exam = await Exam.findById(
+    examId
+  );
+
+  if (!exam) {
+    throw new AppError(
+      404,
+      ERROR_CODES.NOT_FOUND,
+      "Exam not found"
+    );
+  }
+
+  if (
+    exam.status !==
+    "PENDING_APPROVAL"
+  ) {
+    throw new AppError(
+      400,
+      ERROR_CODES.INVALID_OPERATION,
+      "Only PENDING_APPROVAL exams can be rejected"
+    );
+  }
+
+  const updated =
+    await Exam.findByIdAndUpdate(
+      examId,
+      {
+        status: "REJECTED",
+        rejectionReason,
+        approvedBy: adminId,
+        approvedAt: new Date()
+      },
+      { new: true }
+    ).populate([
+      {
+        path: "createdBy",
+        select: "email name"
+      },
+      {
+        path: "classLevelId",
+        select: "section gradeId"
+      },
+      {
+        path: "subjectId",
+        select: "name"
+      }
+    ]);
+
+  return updated;
+}
+
+export async function getExamsForApproval() {
+  const exams = await Exam.find({
+    status: "PENDING_APPROVAL"
+  })
+    .populate([
+      {
+        path: "createdBy",
+        select: "email name"
+      },
+      {
+        path: "classLevelId",
+        select: "section gradeId"
+      },
+      {
+        path: "subjectId",
+        select: "name"
+      }
+    ])
+    .sort({
+      createdAt: -1
+    });
+
+  return exams;
+}
