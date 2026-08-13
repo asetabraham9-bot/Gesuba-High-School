@@ -114,105 +114,117 @@ export async function createStudyMaterial(
 
 export async function getStudyMaterials(
   options: {
-    unitId?: string;
-    type?: string;
-    status?: string;
-    userId?: string;
-    role?: MaterialRole;
-  } = {}
+  unitId?: string;
+  type?: string;
+  status?: string;
+  search?: string;
+  userId?: string;
+  role?: MaterialRole;
+} = {}
 ) {
-  const filter: Record<
-    string,
-    unknown
-  > = {};
+  const conditions: Record<
+  string,
+  unknown
+>[] = [];
 
-  if (options.unitId) {
-    if (
-      !isValidObjectId(
-        options.unitId
-      )
-    ) {
-      throw new AppError(
-        400,
-        ERROR_CODES.INVALID_OPERATION,
-        "Invalid unit ID"
-      );
-    }
-
-    filter.unitId =
-      options.unitId;
+if (options.unitId) {
+  if (!isValidObjectId(options.unitId)) {
+    throw new AppError(
+      400,
+      ERROR_CODES.INVALID_OPERATION,
+      "Invalid unit ID"
+    );
   }
 
-  if (options.type) {
-    filter.type =
-      options.type;
-  }
+  conditions.push({
+    unitId: options.unitId
+  });
+}
 
-  /*
-   * STUDENT
-   * Only published materials.
-   */
-  if (
-    options.role === "STUDENT"
-  ) {
-    filter.status =
-      "PUBLISHED";
-  }
+if (options.type) {
+  conditions.push({
+    type: options.type
+  });
+}
 
-  /*
-   * INSTRUCTOR
-   *
-   * Can see:
-   * - all published materials
-   * - own draft materials
-   * - own archived materials
-   */
-  if (
-    options.role === "INSTRUCTOR"
-  ) {
-    filter.$or = [
+if (options.search) {
+  conditions.push({
+    $or: [
+      {
+        title: {
+          $regex: options.search,
+          $options: "i"
+        }
+      },
+      {
+        description: {
+          $regex: options.search,
+          $options: "i"
+        }
+      }
+    ]
+  });
+}
+
+/*
+ * Student:
+ * only published.
+ */
+if (options.role === "STUDENT") {
+  conditions.push({
+    status: "PUBLISHED"
+  });
+}
+
+/*
+ * Instructor:
+ * published materials OR own materials.
+ */
+if (options.role === "INSTRUCTOR") {
+  conditions.push({
+    $or: [
       {
         status: "PUBLISHED"
       },
       {
-        createdBy:
-          options.userId
+        createdBy: options.userId
       }
-    ];
-  }
+    ]
+  });
+}
 
-  /*
-   * ADMIN
-   *
-   * Can see everything.
-   *
-   * If status is provided,
-   * filter by it.
-   */
-  if (
-    options.role === "ADMIN" &&
-    options.status
-  ) {
-    filter.status =
-      options.status;
-  }
+/*
+ * Admin:
+ * optional status filter.
+ */
+if (
+  options.role === "ADMIN" &&
+  options.status
+) {
+  conditions.push({
+    status: options.status
+  });
+}
 
-  return StudyMaterial.find(
-    filter
-  )
-    .populate({
-      path: "unitId",
-      select:
-        "title unitNumber subjectId"
-    })
-    .populate({
-      path: "createdBy",
-      select:
-        "email role"
-    })
-    .sort({
-      createdAt: -1
-    });
+const filter =
+  conditions.length > 0
+    ? { $and: conditions }
+    : {};
+
+  return StudyMaterial.find(filter)
+  .populate({
+    path: "unitId",
+    select:
+      "title unitNumber subjectId"
+  })
+  .populate({
+    path: "createdBy",
+    select:
+      "email role"
+  })
+  .sort({
+    createdAt: -1
+  });
 }
 
 /* =========================

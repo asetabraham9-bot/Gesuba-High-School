@@ -48,34 +48,18 @@ export async function createStudyMaterialController(
 /* =========================
    LIST
 ========================= */
-
 export async function getStudyMaterialsController(
   req: Request,
   res: Response
 ): Promise<void> {
-  const materials =
-    await getStudyMaterials({
-      unitId:
-        req.query.unitId as
-          | string
-          | undefined,
-
-      type:
-        req.query.type as
-          | string
-          | undefined,
-
-      status:
-        req.query.status as
-          | string
-          | undefined,
-
-      userId:
-        req.user!.id,
-
-      role:
-        req.user!.role
-    });
+  const materials = await getStudyMaterials({
+    unitId: req.query.unitId as string | undefined,
+    type: req.query.type as string | undefined,
+    status: req.query.status as string | undefined,
+    search: req.query.search as string | undefined,
+    userId: req.user!.id,
+    role: req.user!.role
+  });
 
   res.status(200).json({
     success: true,
