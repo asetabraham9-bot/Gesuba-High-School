@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Gesuba - Exams</title>
+</head>
+<body>
+  <h1>Exams (Demo)</h1>
+  <p>This demo page can fetch exam lists from the backend during the presentation.</p>
+  <pre id="output">Loading...</pre>
+  <script>
+    async function loadExams() {
+      try {
+        const res = await fetch('/api/v1/exams/student/available', { credentials: 'include' });
+        const json = await res.json();
+        document.getElementById('output').textContent = JSON.stringify(json, null, 2);
+      } catch (err) {
+        document.getElementById('output').textContent = 'Error fetching exams: ' + err;
+      }
+    }
+    loadExams();
+  </script>
+</body>
+</html>
