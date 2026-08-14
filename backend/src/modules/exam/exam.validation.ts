@@ -275,3 +275,38 @@ export const rejectExamSchema =
         "Reason for rejecting the exam"
       )
   });
+
+// SCHEDULING / AVAILABILITY SCHEMAS
+
+export const scheduleExamSchema =
+  z.object({
+    startAt: z.coerce.date().optional(),
+    endAt: z.coerce.date().optional(),
+    durationMinutes: z.number().int().positive().optional()
+  }).refine((data) => {
+    if (data.startAt && data.endAt) {
+      return data.endAt > data.startAt;
+    }
+
+    return true;
+  }, {
+    message: "End time must be after start time",
+    path: ["endAt"]
+  });
+
+export const releaseExamSchema =
+  z.object({
+    classLevelIds: z.array(z.string().min(1)).optional(),
+    releaseAt: z.coerce.date().optional(),
+    revokeAt: z.coerce.date().optional()
+  }).refine((data) => {
+    if (data.releaseAt && data.revokeAt) {
+      return data.revokeAt > data.releaseAt;
+    }
+    return true;
+  }, {
+    message: "Revoke time must be after release time",
+    path: ["revokeAt"]
+  });
+
+export const revokeExamSchema = z.object({});

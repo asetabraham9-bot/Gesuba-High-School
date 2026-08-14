@@ -4,10 +4,13 @@ import {
   loginController,
   refreshController,
   logoutController,
-  getCurrentUserController
+  getCurrentUserController,
+  adminTestController,
+  instructorTestController
 } from "./auth.controller.js";
 
 import { authenticate } from "../../middleware/auth.middleware.js";
+import { authorize } from "../../middleware/rbac.middleware.js";
 
 export const authRouter = Router();
 
@@ -30,4 +33,18 @@ authRouter.get(
   "/me",
   authenticate,
   getCurrentUserController
+);
+
+authRouter.get(
+  "/admin/test",
+  authenticate,
+  authorize("ADMIN"),
+  adminTestController
+);
+
+authRouter.get(
+  "/instructor/test",
+  authenticate,
+  authorize("INSTRUCTOR", "ADMIN"),
+  instructorTestController
 );

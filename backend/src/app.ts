@@ -13,6 +13,9 @@ import { userRouter } from "./modules/users/user.routes.js";
 import { curriculumRouter } from "./modules/curriculum/curriculum.routes.js";
 import { studyMaterialRouter } from "./modules/study-material/studymaterial.routes.js";
 import examRoutes from "./modules/exam/exam.routes.js";
+import examSchedulingRoutes from "./modules/exam/exam.scheduling.routes.js";
+import examAvailabilityRoutes from "./modules/exam/exam.availability.routes.js";
+import examStudentRoutes from "./modules/exam/exam.student.routes.js";
 
 import { notFoundMiddleware } from "./middleware/not-found.middleware.js";
 import { errorMiddleware } from "./middleware/error.middleware.js";
@@ -49,6 +52,9 @@ app.use("/api/v1/users", userRouter);
 app.use("/api/v1/curriculum", curriculumRouter);
 app.use("/api/v1/study-material", studyMaterialRouter);
 app.use("/api/v1/exams", examRoutes);
+app.use("/api/v1/exams", examSchedulingRoutes);
+app.use("/api/v1/exams", examAvailabilityRoutes);
+app.use("/api/v1", examStudentRoutes);
 
 // 404 handler
 app.use(notFoundMiddleware);

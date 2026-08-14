@@ -98,6 +98,51 @@ const examSchema =
         type: Boolean,
         default: false
       }
+    ,
+      // Scheduling & release fields
+      isScheduleLocked: {
+        type: Boolean,
+        default: false
+      },
+
+      scheduleLocked: {
+        type: Boolean,
+        default: false
+      },
+
+      scheduleLockTime: {
+        type: Date
+      },
+
+      isReleasedToStudents: {
+        type: Boolean,
+        default: false
+      },
+
+      releasedAt: {
+        type: Date
+      },
+
+      releasedTo: [
+        {
+          type: Schema.Types.ObjectId,
+          ref: "ClassLevel"
+        }
+      ],
+
+      scheduleRevokeAt: {
+        type: Date
+      },
+
+      releaseStatus: {
+        type: String,
+        enum: ["ACTIVE", "REVOKED", "SCHEDULED"],
+        default: "ACTIVE"
+      },
+
+      revokedAt: {
+        type: Date
+      }
     },
     {
       timestamps: true
@@ -120,6 +165,14 @@ examSchema.index({
 examSchema.index({
   startAt: 1,
   endAt: 1
+});
+
+examSchema.index({
+  releaseStatus: 1
+});
+
+examSchema.index({
+  releasedTo: 1
 });
 
 export type Exam =

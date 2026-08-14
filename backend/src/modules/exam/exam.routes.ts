@@ -42,6 +42,12 @@ router.get(
 );
 
 router.get(
+  "/approval-queue",
+  authorize("ADMIN"),
+  getExamsForApprovalController
+);
+
+router.get(
   "/:id",
   authorize("INSTRUCTOR"),
   getExamController
@@ -95,12 +101,6 @@ router.post(
   "/:id/publish",
   authorize("INSTRUCTOR"),
   publishExamController
-);
-
-router.get(
-  "/approval-queue",
-  authorize("ADMIN"),
-  getExamsForApprovalController
 );
 
 router.post(

@@ -22,6 +22,9 @@ export interface IUser {
   role: UserRole;
   status: UserStatus;
 
+  name?: string;
+  classLevelId?: Schema.Types.ObjectId;
+
   emailVerified: boolean;
 
   lastLoginAt?: Date;
@@ -55,6 +58,16 @@ const userSchema = new Schema<IUser>(
       enum: USER_ROLES,
       required: true,
       default: "STUDENT"
+    },
+
+    name: {
+      type: String,
+      trim: true
+    },
+
+    classLevelId: {
+      type: Schema.Types.ObjectId,
+      ref: "ClassLevel"
     },
 
     status: {
