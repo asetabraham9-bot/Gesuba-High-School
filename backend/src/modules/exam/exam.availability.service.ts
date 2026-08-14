@@ -322,14 +322,16 @@ export async function getAvailableExamsForStudent(
 
   const now = new Date();
 
-  const exams = await Exam.find({
+  const filter: any = {
     status: "APPROVED",
     isReleasedToStudents: true,
     releaseStatus: "ACTIVE",
-    releasedTo: student.classLevelId,
+    releasedTo: { $in: [student.classLevelId] },
     startAt: { $lte: now },
     endAt: { $gt: now }
-  })
+  };
+
+  const exams = await Exam.find(filter)
     .populate([
       {
         path: "createdBy",
@@ -379,13 +381,15 @@ export async function getUpcomingExamsForStudent(
 
   const now = new Date();
 
-  const exams = await Exam.find({
+  const filter: any = {
     status: "APPROVED",
     isReleasedToStudents: true,
     releaseStatus: "ACTIVE",
-    releasedTo: student.classLevelId,
+    releasedTo: { $in: [student.classLevelId] },
     startAt: { $gt: now }
-  })
+  };
+
+  const exams = await Exam.find(filter)
     .populate([
       {
         path: "createdBy",
@@ -435,12 +439,14 @@ export async function getPastExamsForStudent(
 
   const now = new Date();
 
-  const exams = await Exam.find({
+  const filter: any = {
     status: { $in: ["APPROVED", "COMPLETED"] },
     isReleasedToStudents: true,
-    releasedTo: student.classLevelId,
+    releasedTo: { $in: [student.classLevelId] },
     endAt: { $lte: now }
-  })
+  };
+
+  const exams = await Exam.find(filter)
     .populate([
       {
         path: "createdBy",

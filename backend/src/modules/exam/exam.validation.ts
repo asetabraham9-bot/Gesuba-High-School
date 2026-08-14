@@ -310,3 +310,16 @@ export const releaseExamSchema =
   });
 
 export const revokeExamSchema = z.object({});
+
+export const attemptAnswerSchema = z.object({
+  questionId: z.string().min(1),
+  answer: z.string().max(2000).optional().default("")
+});
+
+export const saveAttemptAnswersSchema = z.object({
+  answers: z.array(attemptAnswerSchema).min(1)
+});
+
+export const submitAttemptSchema = z.object({
+  answers: z.array(attemptAnswerSchema).optional()
+});
