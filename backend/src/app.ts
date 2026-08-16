@@ -18,6 +18,9 @@ import examAvailabilityRoutes from "./modules/exam/exam.availability.routes.js";
 import examStudentRoutes from "./modules/exam/exam.student.routes.js";
 import examAttemptRoutes from "./modules/exam/exam.attempt.routes.js";
 import examResultsRoutes from "./modules/exam/exam.results.routes.js";
+import { attendanceRoutes } from "./modules/attendance/attendance.routes.js";
+import { notificationRoutes } from "./modules/notifications/notification.routes.js";
+import { classManagementRoutes } from "./modules/class-management/class-management.routes.js";
 
 import { notFoundMiddleware } from "./middleware/not-found.middleware.js";
 import { errorMiddleware } from "./middleware/error.middleware.js";
@@ -59,6 +62,9 @@ app.use("/api/v1/exams", examAvailabilityRoutes);
 app.use("/api/v1/exams", examAttemptRoutes);
 app.use("/api/v1/exams", examResultsRoutes);
 app.use("/api/v1", examStudentRoutes);
+app.use("/api/v1/attendance", attendanceRoutes);
+app.use("/api/v1/notifications", notificationRoutes);
+app.use("/api/v1/classes", classManagementRoutes);
 
 // 404 handler
 app.use(notFoundMiddleware);

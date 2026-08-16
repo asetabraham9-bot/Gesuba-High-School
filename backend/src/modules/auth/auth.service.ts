@@ -1,8 +1,11 @@
 import argon2 from "argon2";
 
 import { User } from "../../models/user.model.js";
+import { Grade } from "../../models/grade.model.js";
+import { ClassLevel } from "../../models/class-level.model.js";
 import { AppError } from "../../errors/app-error.js";
 import { ERROR_CODES } from "../../errors/error.codes.js";
+import type { RegisterInput } from "./auth.validation.js";
 
 export async function hashPassword(
   password: string
@@ -23,9 +26,10 @@ export async function verifyPassword(
 }
 
 export async function registerStudent(
-  email: string,
-  password: string
+  input: RegisterInput
 ) {
+  const email = `${input.studentId.toLowerCase()}@student.gesuba.edu.et`;
+
   const existingUser = await User.findOne({
     email
   });
@@ -34,16 +38,43 @@ export async function registerStudent(
     throw new AppError(
       409,
       ERROR_CODES.EMAIL_ALREADY_REGISTERED,
-      "An account with this email already exists"
+      "An account with this student ID already exists"
+    );
+  }
+
+  const grade = await Grade.findOne({
+    number: input.gradeLevel
+  });
+
+  if (!grade) {
+    throw new AppError(
+      400,
+      ERROR_CODES.VALIDATION_ERROR,
+      `Grade ${input.gradeLevel} is not configured yet`
+    );
+  }
+
+  const classLevel = await ClassLevel.findOne({
+    gradeId: grade._id,
+    section: "A"
+  });
+
+  if (!classLevel) {
+    throw new AppError(
+      400,
+      ERROR_CODES.VALIDATION_ERROR,
+      `No class level found for grade ${input.gradeLevel}`
     );
   }
 
   const passwordHash =
-    await hashPassword(password);
+    await hashPassword(input.password);
 
   const user = await User.create({
     email,
     passwordHash,
+    name: input.fullName,
+    classLevelId: classLevel._id,
     role: "STUDENT",
     status: "ACTIVE"
   });

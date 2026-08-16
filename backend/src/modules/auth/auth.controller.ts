@@ -1,8 +1,13 @@
 import type { Request, Response } from "express";
-import { loginSchema} from "./auth.validation.js";
-import { authenticateUser} from "./auth.service.js";
+import { loginSchema, registerSchema } from "./auth.validation.js";
+import { authenticateUser, registerStudent } from "./auth.service.js";
+import { formatUserResponse } from "./user-response.js";
 import { findRefreshToken, revokeRefreshToken, createAccessToken, createRefreshToken, storeRefreshToken } from "./token.service.js";
-import { setRefreshTokenCookie, clearRefreshTokenCookie } from "./auth.cookies.js";
+import {
+  setRefreshTokenCookie,
+  clearRefreshTokenCookie,
+  REFRESH_TOKEN_COOKIE
+} from "./auth.cookies.js";
 import { User } from "../../models/user.model.js";
 import { AppError } from "../../errors/app-error.js";
 import { ERROR_CODES } from "../../errors/error.codes.js";
@@ -39,15 +44,13 @@ export async function loginController(
     refreshToken
   );
 
+  const userResponse = await formatUserResponse(user);
+
   res.status(200).json({
     success: true,
     data: {
       accessToken,
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role
-      }
+      user: userResponse
     }
   });
 }
@@ -87,18 +90,27 @@ export async function getCurrentUserController(
   res.status(200).json({
     success: true,
     data: {
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        status: user.status,
-        emailVerified: user.emailVerified,
-        createdAt: user.createdAt,
-        lastLoginAt: user.lastLoginAt
-      }
+      user: await formatUserResponse(user)
     }
   });
 }
+export async function registerController(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const input = registerSchema.parse(req.body);
+
+  const user = await registerStudent(input);
+
+  res.status(201).json({
+    success: true,
+    data: {
+      user: await formatUserResponse(user)
+    },
+    message: "Account created successfully"
+  });
+}
+
 export async function adminTestController(
   req: Request,
   res: Response
@@ -130,7 +142,7 @@ export async function refreshController(
   res: Response
 ): Promise<void> {
   const refreshToken =
-    req.cookies?.refreshToken;
+    req.cookies?.[REFRESH_TOKEN_COOKIE];
 
   if (!refreshToken) {
     throw new AppError(
@@ -200,7 +212,7 @@ export async function logoutController(
   res: Response
 ): Promise<void> {
   const refreshToken =
-    req.cookies?.refreshToken;
+    req.cookies?.[REFRESH_TOKEN_COOKIE];
 
   if (refreshToken) {
     await revokeRefreshToken(

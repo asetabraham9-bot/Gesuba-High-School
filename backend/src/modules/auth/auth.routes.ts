@@ -2,6 +2,7 @@ import { Router } from "express";
 
 import {
   loginController,
+  registerController,
   refreshController,
   logoutController,
   getCurrentUserController,
@@ -17,6 +18,11 @@ export const authRouter = Router();
 authRouter.post(
   "/login",
   loginController
+);
+
+authRouter.post(
+  "/register",
+  registerController
 );
 
 authRouter.post(
